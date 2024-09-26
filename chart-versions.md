@@ -23,10 +23,10 @@ This document tracks the versions of Helm charts used in this project. Please up
 
 ### Change History
 
-| Date       | Version | Change Description                                     | Author     |
-|------------|---------|--------------------------------------------------------|------------|
-| 2024-09-25 | 4.0.0   | Initial setup of Jenkins chart with custom values      | Your Name  |
-| 2024-10-05 | 4.1.0   | Updated Jenkins to version 4.1.0 to address security fixes | Your Name  |
+| Date       | Version | Change Description                                         | Author          |
+|------------|---------|------------------------------------------------------------|-----------------|
+| 2024-09-25 | 4.0.0   | Initial setup of Jenkins chart with custom values          | Antonio Moreno  |
+| 2024-10-05 | 4.1.0   | Updated Jenkins to version 4.1.0 to address security fixes | Antonio Moreno  |
 
 ---
 
@@ -45,9 +45,9 @@ This document tracks the versions of Helm charts used in this project. Please up
 
 ### Change History
 
-| Date       | Version | Change Description                                     | Author     |
-|------------|---------|--------------------------------------------------------|------------|
-| 2024-09-25 | 2.3.0   | Initial deployment of ExampleApp                       | Your Name  |
+| Date       | Version | Change Description                                     | Author          |
+|------------|---------|--------------------------------------------------------|-----------------|
+| 2024-09-25 | 2.3.0   | Initial deployment of ExampleApp                       | Antonio Moreno  |
 
 ---
 
