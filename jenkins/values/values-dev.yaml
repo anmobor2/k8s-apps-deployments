@@ -1,0 +1,120 @@
+controller:
+  # Service type for the Jenkins controller
+  serviceType: NodePort
+
+  # Jenkins admin user credentials
+  adminUser: admin
+  adminPassword: admin
+
+  # Service ports
+  service:
+    port: 8080
+    targetPort: 8080
+    nodePort: 30000
+
+  # Storage configuration
+  persistence:
+    enabled: true
+    existingClaim: ""
+    storageClass: "standard"
+    accessMode: "ReadWriteOnce"
+    size: "10Gi"
+
+  # Enable the Kubernetes plugin and configure it
+  JCasC:
+    enabled: true
+    configScripts:
+      kubernetes-config: |
+        jenkins:
+          clouds:
+            - kubernetes:
+                name: "kubernetes"
+                namespace: "default"
+                jenkinsUrl: "http://jenkins:8080"
+                jenkinsTunnel: "jenkins-agent:50000"
+                containerCapStr: "10"
+                templates:
+                  - name: "jenkins-agent"
+                    label: "kubernetes"
+                    yaml: |
+                      apiVersion: v1
+                      kind: Pod
+                      spec:
+                        containers:
+                          - name: jnlp
+                            image: jenkins/inbound-agent:latest
+                            args: ['$(JENKINS_SECRET)', '$(JENKINS_NAME)']
+                        restartPolicy: Never
+                    retentionTimeout: 5 # 
+
+  # Resources settings
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+
+  # Node selector to run Jenkins on specific nodes if needed
+  nodeSelector: {}
+
+  # Tolerations for scheduling pods on nodes with taints
+  tolerations: []
+
+  # Affinity rules for scheduling pods
+  affinity: {}
+
+agent:
+  enabled: true
+  podName: "jenkins-agent"
+  image: "jenkins/inbound-agent"
+  tag: "4.13-1-jdk11"
+  workingDir: "/home/jenkins"
+  privileged: true
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  jenkinsSlaveRoot: "/home/jenkins"
+  customJenkinsLabels: "kubernetes"
+  # Enable dynamic Jenkins agent pods that automatically get deleted after use
+  podRetention:
+    always: true
+  # Automatic removal of agent pods after use
+  retentionTimeout: 5
+
+persistence:
+  enabled: true
+  storageClass: "standard"
+  accessMode: "ReadWriteOnce"
+  size: "10Gi"
+  annotations: {}
+
+rbac:
+  create: true
+  serviceAccount:
+    create: true
+    name: "jenkins"
+  install: true
+
+secrets:
+  enabled: false
+
+serviceAccount:
+  create: true
+  name: ""
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "200m"

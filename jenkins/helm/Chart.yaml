@@ -1,0 +1,8 @@
+apiVersion: v2
+name: k8s-deployments
+description: A Helm chart for deploying Jenkins and other applications
+version: 1.0.0
+dependencies:
+  - name: jenkins
+    version: "5.6.5"
+    repository: "https://charts.jenkins.io"
