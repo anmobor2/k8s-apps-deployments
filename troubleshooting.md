@@ -38,3 +38,14 @@ k8s-apps-deployments kubectl get secret jenkins -n default -o jsonpath="{.data.j
 BqVjA3QdtfeX485UoPKSoO
 
 admin admin
+
+kubectl port-forward svc/jenkins 8080:8080 -n default
+
+
+kubectl exec -it jenkins-0 -- /bin/bash
+curl -v https://updates.jenkins.io
+curl -v https://updates.jenkins.io/update-center.json
+
+kubectl exec -it jenkins-0 --  curl -v https://updates.jenkins.io
+
+kubectl get pods -w <-- wait for the pod to be ready

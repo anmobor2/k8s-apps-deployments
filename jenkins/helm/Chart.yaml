@@ -1,8 +1,26 @@
 apiVersion: v2
-name: k8s-deployments
-description: A Helm chart for deploying Jenkins and other applications
-version: 1.0.0
+name: jenkins
+description: Jenkins - Build great things at any scale! The leading open source automation server, Jenkins provides hundreds of plugins to support building, deploying and automating any project.
+home: https://jenkins.io/
+icon: https://wiki.jenkins-ci.org/download/attachments/2916393/logo.png
+sources:
+  - https://github.com/jenkinsci/jenkins
+  - https://github.com/jenkinsci/docker-inbound-agent
+  - https://github.com/maorfr/kube-tasks
+  - https://github.com/jenkinsci/configuration-as-code-plugin
+maintainers:
+  - name: Olblak
+    email: olivier.vernin@gmail.com
+  - name: jenkinsci
+    email: jenkinsci-board@googlegroups.com
+version: 4.6.1
+appVersion: "2.414.3"
 dependencies:
   - name: jenkins
-    version: "5.6.5"
-    repository: "https://charts.jenkins.io"
+    #repository: "https://charts.jenkins.io"
+    repository: https://charts.helm.sh/stable
+    version: "5.6.5" # 5.6.5 is the latest version of the jenkins chart as of 2024-07-23
+    condition: dependencies.common.enabled
+
+
+    

@@ -1,52 +1,52 @@
 controller:
-  # Service type for the Jenkins controller
-  serviceType: NodePort
-
-  # Jenkins admin user credentials
-  adminUser: admin
-  adminPassword: admin
-
-  # Service ports
-  service:
-    port: 8080
-    targetPort: 8080
-    nodePort: 30000
-
-  # Storage configuration
-  persistence:
-    enabled: true
-    existingClaim: ""
-    storageClass: "standard"
-    accessMode: "ReadWriteOnce"
-    size: "10Gi"
-
-  # Enable the Kubernetes plugin and configure it
+  image: "jenkins/jenkins"
+  tag: "2.414.3-jdk17"
+  installPlugins:
+  - kubernetes:1.31.3
+  - workflow-aggregator:2.6
+  - git:4.10.0
+  - matrix-auth:2.6.8
+  - credentials-binding:1.27
+  - ssh-slaves:1.32.0
+  - pipeline-model-definition:2.2
+  - pipeline-utility-steps:2.10.0
+  - git-client:3.9.1
+  - docker-plugin:1.2.2
+  - blueocean:1.25.3
+  - workflow-multibranch:2.26
+  - ws-cleanup:0.40
+  - dashboard-view:2.17
+  - material-theme:0.3.4
+  - theme-manager:0.6
+  - simple-theme-plugin:0.7
+  - custom-logo:1.1
+  - cloudbees-folder:6.16
+  # JCasC configuration to add the agent pod templates
   JCasC:
-    enabled: true
     configScripts:
-      kubernetes-config: |
+      agents: |
         jenkins:
           clouds:
             - kubernetes:
                 name: "kubernetes"
-                namespace: "default"
-                jenkinsUrl: "http://jenkins:8080"
-                jenkinsTunnel: "jenkins-agent:50000"
-                containerCapStr: "10"
                 templates:
-                  - name: "jenkins-agent"
-                    label: "kubernetes"
-                    yaml: |
-                      apiVersion: v1
-                      kind: Pod
-                      spec:
-                        containers:
-                          - name: jnlp
-                            image: jenkins/inbound-agent:latest
-                            args: ['$(JENKINS_SECRET)', '$(JENKINS_NAME)']
-                        restartPolicy: Never
-                    retentionTimeout: 5 # 
-
+                  - name: "java11-agent"
+                    label: "java11"
+                    nodeUsageMode: NORMAL
+                    containers:
+                      - name: "jnlp"
+                        image: "jenkins/inbound-agent:3206.vb_15dcf73f6a_9-jdk11"
+                  - name: "java17-agent"
+                    label: "java17"
+                    nodeUsageMode: NORMAL
+                    containers:
+                      - name: "jnlp"
+                        image: "jenkins/inbound-agent:3206.vb_15dcf73f6a_9-jdk17"
+  # Enable cleanup of finished agents
+  podRetention: "Never"
+  # Jenkins admin user credentials
+  adminUser: admin
+  adminPassword: admin
   # Resources settings
   resources:
     requests:
@@ -56,65 +56,62 @@ controller:
       cpu: "1"
       memory: "2Gi"
 
-  # Node selector to run Jenkins on specific nodes if needed
-  nodeSelector: {}
-
-  # Tolerations for scheduling pods on nodes with taints
-  tolerations: []
-
-  # Affinity rules for scheduling pods
-  affinity: {}
-
 agent:
-  enabled: true
-  podName: "jenkins-agent"
-  image: "jenkins/inbound-agent"
-  tag: "4.13-1-jdk11"
-  workingDir: "/home/jenkins"
-  privileged: true
-  resources:
-    requests:
-      cpu: "200m"
-      memory: "256Mi"
-    limits:
-      cpu: "500m"
-      memory: "512Mi"
-  nodeSelector: {}
-  tolerations: []
-  affinity: {}
-  jenkinsSlaveRoot: "/home/jenkins"
-  customJenkinsLabels: "kubernetes"
-  # Enable dynamic Jenkins agent pods that automatically get deleted after use
-  podRetention:
-    always: true
-  # Automatic removal of agent pods after use
-  retentionTimeout: 5
+  enabled: false
 
+additionalAgents:
+  java11:
+    podName: java11-agent
+    customJenkinsLabels: java11
+    image: jenkins/inbound-agent
+    tag: "3206.vb_15dcf73f6a_9-jdk11"
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "256Mi"
+      limits:
+        cpu: "1"
+        memory: "512Mi"
+  java17:
+    podName: java17-agent
+    customJenkinsLabels: java17
+    image: jenkins/inbound-agent
+    tag: "3206.vb_15dcf73f6a_9-jdk17"
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "256Mi"
+      limits:
+        cpu: "1"
+        memory: "512Mi"
+
+service:
+  type: LoadBalancer
+  port: 8080
+
+# Storage configuration
 persistence:
   enabled: true
+  existingClaim: ""
   storageClass: "standard"
   accessMode: "ReadWriteOnce"
   size: "10Gi"
-  annotations: {}
+
+# Node selector to run Jenkins on specific nodes if needed
+nodeSelector: {}
+
+# Tolerations for scheduling pods on nodes with taints
+tolerations: []
+
+# Affinity rules for scheduling pods
+affinity: {}
 
 rbac:
   create: true
-  serviceAccount:
-    create: true
-    name: "jenkins"
-  install: true
-
-secrets:
-  enabled: false
 
 serviceAccount:
   create: true
-  name: ""
+  name: "jenkins"
 
-resources:
-  requests:
-    memory: "256Mi"
-    cpu: "100m"
-  limits:
-    memory: "512Mi"
-    cpu: "200m"
+secrets:
+  enabled: false

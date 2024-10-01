@@ -1,0 +1,125 @@
+controller:
+  installPlugins:
+  - kubernetes:1.31.3
+  - workflow-aggregator:2.6
+  - git:4.10.0
+  - matrix-auth:2.6.8
+  - java:1.5
+  - credentials-binding:1.27
+  - ssh-slaves:1.32.0
+  - pipeline-model-definition:2.2
+  - pipeline-utility-steps:2.10.0
+  - git-client:3.9.1
+  - docker-plugin:1.2.2
+  - jdk-tool:1.5
+  - blueocean:1.25.3
+  - workflow-multibranch:2.26
+  - ws-cleanup:0.40
+  - dashboard-view:2.17
+  - material-theme:0.3.4
+  - theme-manager:0.6
+  - simple-theme-plugin:0.7
+  - custom-logo:1.1
+  - cloudbees-folder:6.16
+
+  # Jenkins admin credentials
+  adminUser: admin
+  adminPassword: admin
+
+  # Persistence configuration
+  persistentVolume:
+    enabled: true
+    size: 8Gi
+    storageClass: standard # Update based on your storage class
+  persistentVolumeClaim:
+    existingClaim: ""
+
+  # Jenkins URL (adjust as needed)
+  jenkinsUriPrefix: /
+  jenkinsUrl: "http://jenkins.mydomain.com"
+
+  # Resources for the Jenkins controller
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+
+  # Enable dynamic provisioning and cleanup of agents
+  agent:
+    enabled: true
+    customJenkinsLabels: "kubernetes-agent"
+    alwaysPullImage: true
+    podTemplates:
+    - name: "java-agent"
+      label: "java"
+      containers:
+      - name: "jnlp"
+        image: "jenkins/inbound-agent:latest"
+        resourceRequestCpu: "100m"
+        resourceRequestMemory: "256Mi"
+      volumes:
+      - name: "workspace-volume"
+        emptyDir: {}
+
+  # Enable cleanup of finished agents
+  retentionStrategy:
+    always: false
+    idleMinutes: 0
+    deleteAgentAfterBuild: true
+
+  # Kubernetes plugin configuration
+  JCasC:
+    enabled: true
+    configScripts:
+      kubernetes-config: |
+        jenkins:
+          clouds:
+            - kubernetes:
+                name: "kubernetes"
+                namespace: "default"
+                jenkinsUrl: "http://jenkins:8080"
+                jenkinsTunnel: "jenkins-agent:50000"
+                containerCapStr: "10"
+                templates:
+                  - name: "jenkins-agent"
+                    label: "kubernetes"
+                    yaml: |
+                      apiVersion: v1
+                      kind: Pod
+                      spec:
+                        containers:
+                          - name: jnlp
+                            image: jenkins/inbound-agent:latest
+                            args: ['$(JENKINS_SECRET)', '$(JENKINS_NAME)']
+                        restartPolicy: Never
+                    retentionTimeout: 5
+
+rbac:
+  create: true
+  serviceAccount:
+    create: true
+    name: jenkins
+
+service:
+  type: LoadBalancer
+  port: 80
+
+persistence:
+  enabled: true
+  size: 8Gi
+  storageClass: standard # Match your Kubernetes StorageClass
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+  - jenkins.mydomain.com
+  tls:
+  - secretName: jenkins-tls
+    hosts:
+    - jenkins.mydomain.com
